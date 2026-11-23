@@ -16,7 +16,7 @@ LABEL org.opencontainers.image.title="Flixer Invites" \
       org.flixer.upstream.web="${WEB_VERSION}"
 
 USER root
-RUN apk add --no-cache nginx redis \
+RUN apk add --force-overwrite --no-cache nginx redis \
     && mkdir -p /srv/web /data/redis /var/lib/flixer/config /run/flixer-secrets /tmp/nginx \
     && chown -R node:node /data /var/lib/flixer /run/flixer-secrets /tmp/nginx
 
