@@ -3,7 +3,7 @@
 # Nothing from the Flixer repos is copied into this repository. The image is assembled from the official,
 # already-published images, so it is always exactly what upstream shipped (see .github/workflows/sync.yml).
 ARG FLIXER_VERSION=latest
-ARG WEB_VERSION=latest
+ARG WEB_VERSION=invites
 
 FROM ghcr.io/flixermedia/flixer-web:${WEB_VERSION} AS web
 
@@ -30,7 +30,9 @@ ENV PORT=8081 \
     DATA_PATH=/data \
     APP_SECRET_FILE=/data/config/app-secret \
     REDIS_URL=redis://127.0.0.1:6379 \
-    WEB_INTERNAL_URL=http://127.0.0.1:8080
+    WEB_INTERNAL_URL=http://127.0.0.1:8080 \
+    FLIXER_MODE=invites \
+    STANDALONE_INVITES=true
 EXPOSE 8080
 VOLUME ["/data"]
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \

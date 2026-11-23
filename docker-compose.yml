@@ -14,6 +14,8 @@ services:
                 condition: service_healthy
         environment:
             DATABASE_URL: postgres://flixer:${POSTGRES_PASSWORD:-flixer}@postgres:5432/flixer
+            FLIXER_MODE: invites
+            STANDALONE_INVITES: "true"
         ports:
             - "${HTTP_PORT:-8080}:8080"
         volumes:
