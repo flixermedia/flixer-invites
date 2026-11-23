@@ -1,0 +1,84 @@
+name: Sync with Flixer
+
+# Keeps ghcr.io/<owner>/flixer-invites identical to upstream: whenever the official flixer or flixer-web
+# image changes, a new combined image is built and pushed. Nothing from upstream is copied into this repo.
+on:
+  schedule:
+    - cron: "17 * * * *" # hourly
+  repository_dispatch:
+    types: [upstream-release] # optional instant trigger, see README
+  push:
+    branches: [main]
+    paths: [Dockerfile, rootfs/**, .github/workflows/sync.yml]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even when upstream has not changed
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+env:
+  API_IMAGE: ghcr.io/flixermedia/flixer
+  WEB_IMAGE: ghcr.io/flixermedia/flixer-web
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve upstream
+        id: up
+        shell: bash
+        run: |
+          set -euo pipefail
+          api_digest="$(skopeo inspect --raw docker://$API_IMAGE:latest | sha256sum | cut -c1-12)"
+          web_digest="$(skopeo inspect --raw docker://$WEB_IMAGE:latest | sha256sum | cut -c1-12)"
+          api_ver="$(skopeo inspect --override-os linux --override-arch amd64 docker://$API_IMAGE:latest | jq -r '.Labels["org.opencontainers.image.version"] // "dev"')"
+          web_ver="$(skopeo inspect --override-os linux --override-arch amd64 docker://$WEB_IMAGE:latest | jq -r '.Labels["org.opencontainers.image.version"] // "dev"')"
+          # Our own build inputs (Dockerfile, rootfs) are part of the identity too.
+          self="$(cat Dockerfile rootfs/* | sha256sum | cut -c1-8)"
+          sync_tag="up-${api_digest}-${web_digest}-${self}"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/flixer-invites"
+          if [ "${{ inputs.force }}" != "true" ] && skopeo inspect --raw "docker://$image:$sync_tag" >/dev/null 2>&1; then
+            build=false
+          else
+            build=true
+          fi
+          { echo "api_ver=$api_ver"; echo "web_ver=$web_ver"; echo "sync_tag=$sync_tag"; echo "image=$image"; echo "build=$build"; } >> "$GITHUB_OUTPUT"
+          echo "api=$api_ver web=$web_ver tag=$sync_tag build=$build"
+
+      - uses: docker/setup-qemu-action@v3
+        if: steps.up.outputs.build == 'true'
+      - uses: docker/setup-buildx-action@v3
+        if: steps.up.outputs.build == 'true'
+      - uses: docker/login-action@v3
+        if: steps.up.outputs.build == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        if: steps.up.outputs.build == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          pull: true
+          push: true
+          build-args: |
+            FLIXER_VERSION=latest
+            WEB_VERSION=latest
+          tags: |
+            ${{ steps.up.outputs.image }}:latest
+            ${{ steps.up.outputs.image }}:${{ steps.up.outputs.sync_tag }}
+            ${{ steps.up.outputs.image }}:${{ steps.up.outputs.api_ver }}

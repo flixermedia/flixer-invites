@@ -1,0 +1,41 @@
+# Flixer Invites: two containers (the app and PostgreSQL). Start with `docker compose up -d`,
+# open http://localhost:8080 and follow the setup wizard.
+#
+# Optional settings in a .env file next to this file:
+#   HTTP_PORT          host port for the web app (default 8080)
+#   POSTGRES_PASSWORD  database password (default: a generated-looking placeholder; set your own)
+#   FLIXER_INVITES_VERSION  pin an image tag instead of `latest`
+services:
+    flixer:
+        image: ghcr.io/flixermedia/flixer-invites:${FLIXER_INVITES_VERSION:-latest}
+        build: .
+        depends_on:
+            postgres:
+                condition: service_healthy
+        environment:
+            DATABASE_URL: postgres://flixer:${POSTGRES_PASSWORD:-flixer}@postgres:5432/flixer
+        ports:
+            - "${HTTP_PORT:-8080}:8080"
+        volumes:
+            - flixer-data:/data
+        restart: unless-stopped
+        init: true
+
+    postgres:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: flixer
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flixer}
+            POSTGRES_DB: flixer
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U flixer -d flixer"]
+            interval: 10s
+            timeout: 3s
+            retries: 5
+        restart: unless-stopped
+
+volumes:
+    flixer-data:
+    postgres-data:
