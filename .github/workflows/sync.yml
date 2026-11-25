@@ -70,6 +70,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to Docker Hub
+        if: steps.up.outputs.build == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
         if: steps.up.outputs.build == 'true'
@@ -88,3 +94,6 @@ jobs:
             ${{ steps.up.outputs.image }}:latest
             ${{ steps.up.outputs.image }}:${{ steps.up.outputs.sync_tag }}
             ${{ steps.up.outputs.image }}:${{ steps.up.outputs.api_ver }}
+            flixermedia/flixer-invites:latest
+            flixermedia/flixer-invites:${{ steps.up.outputs.sync_tag }}
+            flixermedia/flixer-invites:${{ steps.up.outputs.api_ver }}
