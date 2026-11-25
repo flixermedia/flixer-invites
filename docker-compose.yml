@@ -7,7 +7,7 @@
 #   FLIXER_INVITES_VERSION  pin an image tag instead of `latest`
 services:
     flixer:
-        image: ghcr.io/flixermedia/flixer-invites:${FLIXER_INVITES_VERSION:-latest}
+        image: flixermedia/flixer-invites:${FLIXER_INVITES_VERSION:-latest}
         build: .
         depends_on:
             postgres:

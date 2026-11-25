@@ -25,11 +25,11 @@ Put it behind your usual HTTPS reverse proxy and set the public URL in the wizar
 
 This repository contains **no Flixer source code**. `Dockerfile` assembles the image from the official upstream images:
 
-* `ghcr.io/flixermedia/flixer` (API, and its own `processes.config.cjs`, which is reused as-is)
-* `ghcr.io/flixermedia/flixer-web` (the built web app)
+* `flixermedia/flixer` / `ghcr.io/flixermedia/flixer` (API, and its own `processes.config.cjs`, which is reused as-is)
+* `flixermedia/flixer-web` / `ghcr.io/flixermedia/flixer-web` (the built web app)
 
 `.github/workflows/sync.yml` runs hourly. It compares the digests of upstream `:latest` for both images and, when either
-changed (or when this repo's own files change), builds and publishes a new multi-arch `ghcr.io/<owner>/flixer-invites`
+changed (or when this repo's own files change), builds and publishes a new multi-arch `flixermedia/flixer-invites` (and `ghcr.io/<owner>/flixer-invites`)
 image tagged `latest`, the upstream API version, and `up-<api>-<web>-<self>`. Unchanged upstream means no rebuild.
 
 Instant sync (optional): add a last step to the upstream publish workflows and create a `INVITES_DISPATCH_TOKEN` secret

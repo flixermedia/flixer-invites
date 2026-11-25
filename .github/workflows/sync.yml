@@ -26,8 +26,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  API_IMAGE: ghcr.io/flixermedia/flixer
-  WEB_IMAGE: ghcr.io/flixermedia/flixer-web
+  API_IMAGE: flixermedia/flixer
+  WEB_IMAGE: flixermedia/flixer-web
 
 jobs:
   sync:

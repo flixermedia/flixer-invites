@@ -5,9 +5,9 @@
 ARG FLIXER_VERSION=latest
 ARG WEB_VERSION=invites
 
-FROM ghcr.io/flixermedia/flixer-web:${WEB_VERSION} AS web
+FROM flixermedia/flixer-web:${WEB_VERSION} AS web
 
-FROM ghcr.io/flixermedia/flixer:${FLIXER_VERSION}
+FROM flixermedia/flixer:${FLIXER_VERSION}
 ARG FLIXER_VERSION
 ARG WEB_VERSION
 LABEL org.opencontainers.image.title="Flixer Invites" \
